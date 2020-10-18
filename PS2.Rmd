@@ -23,7 +23,7 @@ library(survey)
 library(pROC)
 library(kableExtra)
 library(bookdown)  
-library(arsenal)
+library(table1)
 ```
 
 ```{r echo=F, include=F}
@@ -53,7 +53,7 @@ Introduce the data, explain why it was selected. Make sure to comment on importa
 data <- gss %>% 
   select(age, sex, income_family, place_birth_canada, region, 
            education, pop_center, feelings_life, marital_status, 
-           living_arrangement, self_rated_health, 
+           living_arrangement, self_rated_health, income_respondent,
            self_rated_mental_health, religion_has_affiliation,
            children_in_household, number_marriages)
 data <- na.omit(data)
@@ -95,6 +95,12 @@ levels(data$pop_center)[4] <- c("Rural and non (CMA/CA) or Prince Edward Island"
 data$pop_center[data$pop_center[]=="Prince Edward Island" ]<-"Rural and non (CMA/CA) or Prince Edward Island"
 data$pop_center[data$pop_center[]=="Rural areas and small population centres (non CMA/CA)" ]<-"Rural and non (CMA/CA) or Prince Edward Island"
 data$pop_center <- droplevels(data$pop_center)
+# reduce level of income_family
+levels(data$income_family)[7] <- "$50,000 to $124,999"
+data$income_family[data$income_family[]=="$50,000 to $74,999"]<-"$50,000 to $124,999"
+data$income_family[data$income_family[]=="$75,000 to $99,999"]<-"$50,000 to $124,999"
+data$income_family[data$income_family[]=="$100,000 to $ 124,999"]<-"$50,000 to $124,999"
+data$income_family <- droplevels(data$income_family)
 ```
 
 ```{r echo=F, include=F}
@@ -122,8 +128,7 @@ n=length(train$life_satisfication)
 fpc.srs = rep(N, n)
 train.srs <- svydesign(id=~1, data=train, fpc=fpc.srs)
 train.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
-                       marital_status + living_arrangement + self_rated_health +
-                       self_rated_mental_health, 
+                       marital_status + self_rated_health +income_family, 
                        train.srs, family="binomial")
 summary(train.logit) 
 # use test dataset to test validity
@@ -132,8 +137,7 @@ n=length(test$life_satisfication)
 fpc.srs = rep(N, n)
 test.srs <- svydesign(id=~1, data=test, fpc=fpc.srs)
 test.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
-                       marital_status + living_arrangement + self_rated_health +
-                       self_rated_mental_health, 
+                       marital_status + self_rated_health + income_family, 
                        test.srs, family="binomial")
 summary(test.logit)
 ```
@@ -144,11 +148,14 @@ summary(test.logit)
 ```{r tab1}
 beta1 <- coef(train.logit)
 beta2 <- coef(test.logit)
+SD <-  summary(train.logit)$coef[,2]
+p_value = format(summary(train.logit)$coef[,4], scientific = TRUE, digits = 4)
 # table of coefficient
-kable(cbind(exp(beta1),exp(beta2)),
-      col.names = c('train data', 'test data'),
+kable(cbind(round(exp(beta2),3), round(exp(beta1),3),
+            round(exp(SD),3), p_value),
+      col.names = c('test','train', 'SD','P value'),
       booktabs = TRUE,
-      caption = "Estimated Coefficients")
+      caption = "Summary of Model")
 ```
 
 ```{r fig2, echo=FALSE, fig.cap="ROC curve"}
@@ -192,15 +199,17 @@ Here you discuss subsequent work to be done after this report. This can include 
 ## References
 
 ## Appendix
-```{r}
+```{r echo = F, include=F}
 tt <- gss %>% 
-  select(age, sex, income_family, place_birth_canada, 
-         education, pop_center, feelings_life, marital_status, 
-         vis_minority, citizenship_status, own_rent,
+  select(age, sex, feelings_life, place_birth_canada, 
+         vis_minority, citizenship_status, own_rent,income_family, 
+         education, pop_center, marital_status, 
          living_arrangement, self_rated_health, 
          self_rated_mental_health, religion_has_affiliation,
          children_in_household, number_marriages)
-table_one <- tableby(gss$region ~ ., data = tt)
-summary(table_one, title = "GSS Data")
+```
+
+```{r tab3}
+table1(gss$region~., data = tt)
 ```
 
