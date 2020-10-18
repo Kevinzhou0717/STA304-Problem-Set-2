@@ -12,7 +12,6 @@ header-includes:
 - \usepackage{booktabs}
 - \usepackage{subfig}
 ---
-\centering
 \newpage
 
 ```{r setup, include=FALSE}
@@ -205,8 +204,3 @@ table_one <- tableby(gss$region ~ ., data = tt)
 summary(table_one, title = "GSS Data")
 ```
 
-```{r}
-tt <- gss %>% select(-c(region,main_activity))
-table_one <- tableby(gss$region ~ ., data = tt)
-kable(summary(table_one, title = "GSS Data"))
-```
