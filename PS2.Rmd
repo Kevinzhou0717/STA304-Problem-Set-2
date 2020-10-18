@@ -1,0 +1,213 @@
+---
+title: "Predicts Individual Life Satiafication by Demographic Characteristics"
+author: "Heran Zhou, Xinyu Zhong, Yuhan Gu"
+date: '2020-10-19'
+output:
+  pdf_document:
+    toc: no
+  bookdown::pdf_document2:
+    keep_tex: yes
+    toc: no
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{subfig}
+---
+\centering
+\newpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE)
+library(tidyverse)
+library(knitr)
+library(dplyr)
+library(survey)
+library(pROC)
+library(kableExtra)
+library(bookdown)  
+library(arsenal)
+```
+
+```{r echo=F, include=F}
+gss <- read_csv('gss.csv')
+glimpse(gss)
+col.names <- colnames(gss[,c(12:24,27:62,64:81)])
+gss[,col.names] <- lapply(gss[,col.names], as.factor)
+```
+
+```{r echo=F, include=F}
+data <- gss %>% 
+  select(age, sex, income_family, place_birth_canada, region, 
+           education, pop_center, feelings_life, marital_status, 
+           living_arrangement, self_rated_health, 
+           self_rated_mental_health, religion_has_affiliation,
+           children_in_household, number_marriages)
+data <- na.omit(data)
+summary(data)
+glimpse(data)
+```
+
+```{r echo=F, include=F}
+# reduce level of self_rated_health 
+data$self_rated_health[data$self_rated_health[]=="Don't know"] <- "Fair"
+data$self_rated_health[data$self_rated_health[]=="Very good"] <- "Good"
+data$self_rated_health <- droplevels(data$self_rated_health)
+# reduce level of education level
+levels(data$education)[8:9] <- c("Bachelor or above",
+                                  "college / below bachelor level")
+data$education[data$education[]=="Bachelor's degree (e.g. B.A., B.Sc., LL.B.)"] <- "Bachelor or above"
+data$education[data$education[]=="University certificate, diploma or degree above the bach..."] <- "Bachelor or above"
+data$education[data$education[]=="University certificate or diploma below the bachelor's level"] <- "college / below bachelor level"
+data$education[data$education[]=="College, CEGEP or other non-university certificate or di..."] <- "college / below bachelor level"
+data$education[data$education[]=="Trade certificate or diploma"] <- "college / below bachelor level"
+data$education <- droplevels(data$education)
+# reduce level of living arrangement
+levels(data$living_arrangement)[12:13] <- c("No spouse and children",
+                                 "Spouse and children")
+
+data$living_arrangement[data$living_arrangement[]=="No spouse and single child under 25 years of age" ]<-"No spouse and children"
+data$living_arrangement[data$living_arrangement[]=="No spouse and single child 25 years of age or older" ]<-"No spouse and children"
+data$living_arrangement[data$living_arrangement[]=="No spouse and non-single child(ren)" ]<-"No spouse and children"
+
+data$living_arrangement[data$living_arrangement[]=="Spouse and single child under 25 years of age" ]<-"Spouse and children"
+data$living_arrangement[data$living_arrangement[]=="Spouse and single child 25 years of age or older" ]<-"Spouse and children"
+data$living_arrangement[data$living_arrangement[]=="Spouse and non-single child(ren)" ]<-"Spouse and children"
+data$living_arrangement <- droplevels(data$living_arrangement)
+# reduce level of pop_center
+levels(data$pop_center)[4] <- c("Rural and non (CMA/CA) or Prince Edward Island")
+data$pop_center[data$pop_center[]=="Prince Edward Island" ]<-"Rural and non (CMA/CA) or Prince Edward Island"
+data$pop_center[data$pop_center[]=="Rural areas and small population centres (non CMA/CA)" ]<-"Rural and non (CMA/CA) or Prince Edward Island"
+data$pop_center <- droplevels(data$pop_center)
+```
+
+```{r echo=F, include=F}
+#for logistic model, divide feeling_of_life by mean
+mean(data$feelings_life)
+summary(as.factor(data$feelings_life))
+data <- data %>% 
+  mutate(life_satisfication = as.factor(ifelse(feelings_life>mean(feelings_life),'Higher','Lower')))
+```
+
+```{r ech=F, include=F}
+#split data for validation
+set.seed(304)
+# 60% observations in train dataset, 40% in test data set
+smp_size <- floor(0.6 * nrow(data))
+train_ind <- sample(seq_len(nrow(data)), size = smp_size)
+train <- data[train_ind, ]
+test <- data[-train_ind, ]
+```
+
+```{r echo=F, include=F}
+# fit logistic model
+N=35151728
+n=length(train$life_satisfication)
+fpc.srs = rep(N, n)
+train.srs <- svydesign(id=~1, data=train, fpc=fpc.srs)
+train.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
+                       marital_status + living_arrangement + self_rated_health +
+                       self_rated_mental_health, 
+                       train.srs, family="binomial")
+summary(train.logit) 
+# use test dataset to test validity
+N=35151728	
+n=length(test$life_satisfication)
+fpc.srs = rep(N, n)
+test.srs <- svydesign(id=~1, data=test, fpc=fpc.srs)
+test.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
+                       marital_status + living_arrangement + self_rated_health +
+                       self_rated_mental_health, 
+                       test.srs, family="binomial")
+summary(test.logit)
+```
+
+```{r}
+beta1 <- coef(train.logit)
+beta2 <- coef(test.logit)
+# table of coefficient
+kable(cbind(exp(beta1),exp(beta2)),)
+```
+
+```{r}
+#ROC curve
+roc_p <- predict(train.logit, type = "response")
+roc_l <- roc(train$life_satisfication ~ roc_p)
+## Setting levels: control = 0, case = 1
+## Setting direction: controls < cases
+## The True Positive Rate ##
+TPR <- roc_l$sensitivities
+## The False Positive Rate ##
+FPR <- 1 - roc_l$specificities
+roc <- data.frame(FPR,TPR)
+#ROC curve
+ggplot(roc, aes(FPR,TPR)) + 
+  geom_line(size = 2, alpha = 0.7,col='red') +
+  geom_segment(aes(x = 0, xend = 1, y = 0, yend = 1), linetype="dashed") +
+  labs(title= "ROC curve", 
+       x = "False Positive Rate (1-Specificity)", 
+       y = "True Positive Rate (Sensitivity)") +
+  annotate("text", x = 0.75, y = 0.5, vjust = 0, 
+           label = paste("AUC =",round(auc(roc_l),2)))
+```
+
+
+
+## Title of your Report
+
+# Name(s) of Author(s) 
+# Date
+
+## Abstract
+
+Here is where you give a brief (one paragraph overview of your entire paper). This should include some background/introduction, some methodology, results and conclusions.
+
+## Introduction
+
+Here is where you should give insight into the setting and introduce the goal of the analysis. Here you can introduce ideas and basic concepts regarding the study setting and the potential model. Again, this is the introduction, so you should be explaining the importance of the work that is ahead and hopefully build some suspense for the reader. You can also highlight what will be included in the subsequent sections.
+
+## Data
+
+Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
+
+## Model
+
+Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.  
+
+## Results
+
+Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
+
+Please ensure that everything is well labelled. So if you have multiple histograms and plots, calling them Figure 1, 2, 3, etc. and referencing them as Figure 1, Figure 2, etc. in your report will be expected. The reader should not get lost in a sea of information. Make sure to have the results be clean, well formatted and digestible.
+
+## Discussion
+
+Here you will discuss conclusions drawn from the results and comment on how it relates to the original goal of the study (which was specified in the Introduction).
+
+# Weaknesses
+
+Here we discuss weaknesses of the study, data, analysis, etc. You can also discuss areas for improvement.
+
+# Next Steps
+
+Here you discuss subsequent work to be done after this report. This can include next steps in terms of statistical analysis (perhaps there is a more efficient algorithm available, or perhaps there is a caveat in the data that would allow for some new technique). Future steps should also be specified in terms of the study setting (eg. including a follow-up survey on something, or a subsequent study that would complement the conclusions of your report).
+
+
+## References
+
+## Appendix
+```{r}
+tt <- gss %>% 
+  select(age, sex, income_family, place_birth_canada, 
+         education, pop_center, feelings_life, marital_status, 
+         vis_minority, citizenship_status, own_rent,
+         living_arrangement, self_rated_health, 
+         self_rated_mental_health, religion_has_affiliation,
+         children_in_household, number_marriages)
+table_one <- tableby(gss$region ~ ., data = tt)
+summary(table_one, title = "GSS Data")
+```
+
+```{r}
+tt <- gss %>% select(-c(region,main_activity))
+table_one <- tableby(gss$region ~ ., data = tt)
+kable(summary(table_one, title = "GSS Data"))
+```
