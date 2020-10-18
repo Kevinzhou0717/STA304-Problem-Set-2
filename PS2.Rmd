@@ -34,6 +34,22 @@ col.names <- colnames(gss[,c(12:24,27:62,64:81)])
 gss[,col.names] <- lapply(gss[,col.names], as.factor)
 ```
 
+## Title of your Report
+
+# Name(s) of Author(s) 
+# Date
+
+## Abstract
+
+Here is where you give a brief (one paragraph overview of your entire paper). This should include some background/introduction, some methodology, results and conclusions.
+
+## Introduction
+
+Here is where you should give insight into the setting and introduce the goal of the analysis. Here you can introduce ideas and basic concepts regarding the study setting and the potential model. Again, this is the introduction, so you should be explaining the importance of the work that is ahead and hopefully build some suspense for the reader. You can also highlight what will be included in the subsequent sections.
+
+## Data
+
+Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
 ```{r echo=F, include=F}
 data <- gss %>% 
   select(age, sex, income_family, place_birth_canada, region, 
@@ -46,6 +62,9 @@ summary(data)
 glimpse(data)
 ```
 
+## Model
+
+Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.  
 ```{r echo=F, include=F}
 # reduce level of self_rated_health 
 data$self_rated_health[data$self_rated_health[]=="Don't know"] <- "Fair"
@@ -120,14 +139,20 @@ test.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
 summary(test.logit)
 ```
 
-```{r}
+
+
+## Results
+```{r tab1}
 beta1 <- coef(train.logit)
 beta2 <- coef(test.logit)
 # table of coefficient
-kable(cbind(exp(beta1),exp(beta2)),)
+kable(cbind(exp(beta1),exp(beta2)),
+      col.names = c('train data', 'test data'),
+      booktabs = TRUE,
+      caption = "Estimated Coefficients")
 ```
 
-```{r}
+```{r fig2, echo=FALSE, fig.cap="ROC curve"}
 #ROC curve
 roc_p <- predict(train.logit, type = "response")
 roc_l <- roc(train$life_satisfication ~ roc_p)
@@ -142,37 +167,11 @@ roc <- data.frame(FPR,TPR)
 ggplot(roc, aes(FPR,TPR)) + 
   geom_line(size = 2, alpha = 0.7,col='red') +
   geom_segment(aes(x = 0, xend = 1, y = 0, yend = 1), linetype="dashed") +
-  labs(title= "ROC curve", 
-       x = "False Positive Rate (1-Specificity)", 
+  labs(x = "False Positive Rate (1-Specificity)", 
        y = "True Positive Rate (Sensitivity)") +
   annotate("text", x = 0.75, y = 0.5, vjust = 0, 
            label = paste("AUC =",round(auc(roc_l),2)))
 ```
-
-
-
-## Title of your Report
-
-# Name(s) of Author(s) 
-# Date
-
-## Abstract
-
-Here is where you give a brief (one paragraph overview of your entire paper). This should include some background/introduction, some methodology, results and conclusions.
-
-## Introduction
-
-Here is where you should give insight into the setting and introduce the goal of the analysis. Here you can introduce ideas and basic concepts regarding the study setting and the potential model. Again, this is the introduction, so you should be explaining the importance of the work that is ahead and hopefully build some suspense for the reader. You can also highlight what will be included in the subsequent sections.
-
-## Data
-
-Introduce the data, explain why it was selected. Make sure to comment on important features and highlight any potential drawbacks to the data.
-
-## Model
-
-Introduce the selected model here. It is expected that you will use some mathematical notation here. If you do please ensure that all notation is explained. You may also want to discuss any special (hypothetical) cases of your model here, as well as any caveats.  
-
-## Results
 
 Here you will include all results. This includes descriptive statistics, graphs, figures, tables, and model results. Please ensure that everything is well formatted and in a report style. You must also provide an explanation of the results in this section. You can overflow to an Appendix if needed. 
 
