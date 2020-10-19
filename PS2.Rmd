@@ -34,6 +34,16 @@ gss <- read_csv('gss.csv')
 raw_data <- read_csv("AA4uzB6k.csv")
 ```
 
+# Abstract
+
+
+
+# Introduction
+
+
+# Data
+
+
 ```{r pairplot, fig.cap="Plot of raw data", echo=FALSE}
 sub_plot <- raw_data %>% 
   select(agedc,slm_01,sex,prv,region,
@@ -57,16 +67,6 @@ pairs(sub_plot)
 ```
 
 Refer to Figure \@ref(fig:pairplot).\newline
-
-# Abstract
-
-
-
-# Introduction
-
-
-# Data
-
 
 ```{r echo=F, include=F}
 # select variable and change variable type
@@ -231,7 +231,8 @@ ggplot(roc, aes(FPR,TPR)) +
 
 # Appendix
 
-```{r datasummary, echo = F, longwide, results="asis"}
+
+```{r datasummary, echo = F,  results="asis"}
 tt <- gss %>% 
   select(age, sex, feelings_life, place_birth_canada,  
          vis_minority, citizenship_status, own_rent,income_family, 
