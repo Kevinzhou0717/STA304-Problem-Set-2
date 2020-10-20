@@ -159,7 +159,7 @@ Then, our basic expression of our model is shown as following:
 log(\frac{p}{1-p}) = \beta_0 +\beta_1x_1 +\beta_2x_2 +...+\beta_nx_n + \epsilon
 \]
 where p represents the probability to have life satisfaction above average. $x_i$(i=1,...,n) correspond to levels of *gender*, *education level*, *living area*, *family income*, *marital status* and *self_rated_health*. (Thus, n = sum of level for each predictor has - number of predictors, since one level will used as based line i logistic model), $\beta_i$(i=2,..,7) are estimate coefficient, $\beta_0$ is intercept, $\epsilon$ is random error.\par
-For better representation of data and comprehensive interpretation of the model, we have simplified the classification of certain categorical predictor variables by merging their affiliated categories into new categories. Categories are aggregated as referenced in Appendix A: Summary of Category Aggregations (Table \@ref(tab:sumcat)).\par
+For better representation of data and comprehensive interpretation of the model, we have simplified the classification of certain categorical predictor variables by merging their affiliated categories into new categories. Categories are aggregated as referenced in Appendix: Summary of Category Aggregations (Table \@ref(tab:sumcat)).\par
 However, we do recognize that the results and outputs from a logistic regression model is harder to interpret and analyze. The predictions would need to be inferred from odds and exponents, which will be done in the following sections. \par
 All analysis of data is done by Rstudio software.\par
 
@@ -219,7 +219,27 @@ kable(cbind(round(exp(beta),3),CI[,1],CI[,2], p_value),
 
 The final model result indicates that gender, education, living area, marital status, self-rated health and family income are the significant (p value < 0.05) predictors of life satisfaction. In addition, self-rated health, some of education, marital status and family income levels are especially significant (p<0.001). 
 The response of logistic model is log odds as described in last section, we did exponential transfer for the estimated coefficient to order to more direct interpretation. The estimated coefficient after exponential calculation, confidence interval, and p-value are summarized in Table \@ref(tab:model).\par
-In addition, the AUC (area under curve) = 0.68 as the ROC curve in appendix (Figure \@ref(fig:ROC)) illustrates that the predictive of the final model is 0.68, which is considered acceptable. Also, as shown in appendix Table \@ref(tab:validation), the model build use test dataset gets similar coefficients of the model as when using the training dataset, so the final model is validated through cross-validation. That is, the model is reasonable valid and predictive.\par
+```{r ROC, fig.cap="ROC curve", echo=F}
+#ROC curve
+roc_p <- predict(data.logit, type = "response")
+roc_l <- roc(data$life_satisfication ~ roc_p)
+## Setting levels: control = 0, case = 1
+## Setting direction: controls < cases
+## The True Positive Rate ##
+TPR <- roc_l$sensitivities
+## The False Positive Rate ##
+FPR <- 1 - roc_l$specificities
+roc <- data.frame(FPR,TPR)
+#ROC curve
+ggplot(roc, aes(FPR,TPR)) + 
+  geom_line(size = 2, alpha = 0.7,col='red') +
+  geom_segment(aes(x = 0, xend = 1, y = 0, yend = 1), linetype="dashed") +
+  labs(x = "False Positive Rate (1-Specificity)", 
+       y = "True Positive Rate (Sensitivity)") +
+  annotate("text", x = 0.75, y = 0.5, vjust = 0, 
+           label = paste("AUC =",round(auc(roc_l),2)))
+```
+In addition, the AUC (area under curve) = 0.68 as the ROC curve (Figure \@ref(fig:ROC)) illustrates that the predictive of the final model is 0.68, which is considered acceptable. Also, as shown in appendix Table \@ref(tab:validation), the model build use test dataset gets similar coefficients of the model as when using the training dataset, so the final model is validated through cross-validation. That is, the model is reasonable valid and predictive.\par
 
 # Discussion
 As discussed in previous sections, the data is obtained from the 31st cycle of the General Social Survey (“GSS”) conducted by the Diversity and Sociocultural Statistics at Statistics Canada. The volunteer bias may exist and reweighting was performed to adjust for that. Response variable is also transformed to categorical variable to avoid the unequal distribution of original variable caused by such bias. \par
@@ -283,27 +303,6 @@ Additionally, other data analysis techniques could be used. For example, softwar
 \newpage
 
 # Appendix
-
-```{r ROC, fig.cap="ROC curve", echo=F}
-#ROC curve
-roc_p <- predict(data.logit, type = "response")
-roc_l <- roc(data$life_satisfication ~ roc_p)
-## Setting levels: control = 0, case = 1
-## Setting direction: controls < cases
-## The True Positive Rate ##
-TPR <- roc_l$sensitivities
-## The False Positive Rate ##
-FPR <- 1 - roc_l$specificities
-roc <- data.frame(FPR,TPR)
-#ROC curve
-ggplot(roc, aes(FPR,TPR)) + 
-  geom_line(size = 2, alpha = 0.7,col='red') +
-  geom_segment(aes(x = 0, xend = 1, y = 0, yend = 1), linetype="dashed") +
-  labs(x = "False Positive Rate (1-Specificity)", 
-       y = "True Positive Rate (Sensitivity)") +
-  annotate("text", x = 0.75, y = 0.5, vjust = 0, 
-           label = paste("AUC =",round(auc(roc_l),2)))
-```
 
 ```{r validation}
 beta1 <- coef(train.logit)
