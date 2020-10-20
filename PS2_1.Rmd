@@ -257,9 +257,11 @@ The model can provide reference to government bodies on the effectiveness of cur
 
 ```{r bp, fig.cap="Feelings of life vs. Self rated health", echo=F}
 ggplot(data, aes(self_rated_health,feelings_life))+
-  geom_boxplot()
+  geom_boxplot()+
+  labs(title="Feelings of life vs. Self rated health")
+
 ```
-As indicated by the sample boxplot (Figure \@ref(fig:bp)) that measures the relationship between feelings_life and self_rated_health, there are apparent differences between each health category. A clear trend of increasing life satisfaction exists as the respondents’ health condition improves. \par
+As indicated by the sample boxplot (Figure 3) that measures the relationship between feelings_life and self_rated_health, there are apparent differences between each health category. A clear trend of increasing life satisfaction exists as the respondents’ health condition improves. \par
 
 ## Weaknesses
 The analysis performed has a few apparent weaknesses.\newline
