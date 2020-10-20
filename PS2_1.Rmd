@@ -1,6 +1,6 @@
 ---
 title: "Predicts Individual Life Satiafication by Demographic Characteristics"
-author: "Heran Zhou, Xinyu Zhong, Yaqing Feng, Yuhan Gu"
+author: "Heran Zhou, Xinyu Zhong, Yaqi Feng, Yuhan Gu"
 date: "Octobor 19, 2020"
 header-includes:
   - \usepackage{booktabs}
@@ -142,19 +142,17 @@ data <- data %>%
 # Model
 
 The most of variables in the dataset is discrete and lack linearity between covariates and response which violate assumption of simple linear regression. Though a linear regression model may be more straightforward and easier to analyse, it lacks linearity between covariates and response and violates the assumption of linear model. Therefore, we have chosen to use logistic regression instead, which is more suitable when analysing multi-characteristic discrete variables. \par
-The life satisfaction responses collected in the GSS (2017) were individuals’ self-rated feelings on a scale of 0 to 10, and the average is relatively high. It is unclear how one unit change of life satisfaction will impact a person’s behaviours, and we have  We have hence divided the life feeling responses by their mean value (8.09), to differentiate between individuals with above-average life satisfactions (indicated by 1) and those without (indicated by 0). The resulting new variable, _**Life_Satisfaction**_, which is an indicator, is the response variable of our model. \par
+The life satisfaction responses collected in the GSS (2017) were individuals’ self-rated feelings on a scale of 0 to 10, and the average is relatively high. It is unclear how one unit change of life satisfaction will impact a person’s behaviours, hence we divided the life feeling responses by their mean value (8.09), to differentiate between individuals with above-average life satisfactions (indicated by 1) and those without (indicated by 0). The resulting new variable, _**Life_Satisfaction**_, which is an indicator, is the response variable of our model. \par
 Under our hypothesis, an improvement in 
-education level, 
-family income \footnote{We have to consider the special cases such as underaged individuals taking income from their family. This group of individuals may have above average life satisfactions with no personal income. “Income_respondent” is hence removed from our model.}, 
-marital status \footnote{“marital_status” is chosen over “living_arrangement” since the former is more descriptive and specific. For instance, by living “along” under “living_arrangement”, an individual can be separated, divorced or widowed.
-}
-or 
-self rated health \footnote{We assume that an individual’s physical health will have greater influence on his or her life satisfaction. As an individual’s physical health can affect his or her mental health and vice versa, “self_rated_mental_health” was also removed to avoid multicollinearity.}
-is set to increase the odds of life satisfaction above average. 
-Male\footnote{for logistic model, 'sex' variale and 'is male' variable does not leaad to statistital difference, choose 'sex' for more direct interpretation} 
-is assumed to be more likely to have above average life satisfaction than female, due to gender inequalities at workplace, home, etc. Individuals living in rural areas or Prince Edward Island are more likely to have above average life satisfaction than those living in urban 
-areas \footnote{We assume that an individual’s appetite for a living environment impacts more on his or her life satisfaction than the general geographic region. “pop_center” is hence selected over “province” or “region”.}
-, due to a more relaxed lifestyle.\par
+education level, family income, marital status or self rated health is set to increase the odds of life satisfaction above average. 
+Male is assumed to be more likely to have above average life satisfaction than female, due to gender inequalities at workplace, home, etc. Individuals living in rural areas or Prince Edward Island are more likely to have above average life satisfaction than those living in urban areas, due to a more relaxed lifestyle.\par
+
+The basis of our variable selection is as follows:
+For our logistic model, “sex” variable and “is_male” variable do not lead to statistical difference. We selected “sex” for a more straightforward intepretation. 
+We assume that an individual’s appetite for a living environment (pop_center) impacts more on his or her life satisfaction than the general geographic region (province or region). 
+We consider the special cases such as underaged individuals taking income from their family, who may have above average life satisfactions with no personal income. “Income_respondent” is hence removed from our model. 
+We assume that an individual’s physical health will have greater influence on his or her life satisfaction. “self_rated_mental_health” was also removed to avoid multicollinearity. 
+“marital_status” is chosen over “living_arrangement” since it is more descriptive and specific. For instance, by living “along” under “living_arrangement”, an individual can be separated, divorced or widowed.\par
 Some common demographic characteristics such as age and minority status are not selected due to lack of representative. Others including average hours worked and occupation are excluded from the regression model due to high proportions of  missing values. \par
 Then, our basic expression of our model is shown as following:
 \[
@@ -237,11 +235,11 @@ Lastly, marital status complies partially with our expectations. People married 
 
 The model can provide reference to government bodies on the effectiveness of current social welfare policies. For instance, self-rated health is an extremely significant variable which brings significant difference among each of its affiliated categories. This could imply that Canadian social welfare policies should focus on Canadians’ health and the universal healthcare program is potentially a great contributor to Canada’s high average life satisfaction. As well, government bodies, educational institutions and interested individuals can analyze the results on education coefficients to reconsider the necessity of education from a demographic perspective instead of a financial perspective. Universities can also reconsider the justifiability of increasing tuitions. \par
 
-```{r dis, fig.cap='Feelings of life vs. Self rated health', echo=F}
+```{r bp, fig.cap="Feelings of life vs. Self rated health", echo=F}
 ggplot(data, aes(self_rated_health,feelings_life))+
   geom_boxplot()
 ```
-As indicated by the sample boxplot (Figure \@ref(fig:dis)) that measures the relationship between feelings_life and self_rated_health, there are apparent differences between each health category. A clear trend of increasing life satisfaction exists as the respondents’ health condition improves. \par
+As indicated by the sample boxplot (Figure \@ref(fig:bp)) that measures the relationship between feelings_life and self_rated_health, there are apparent differences between each health category. A clear trend of increasing life satisfaction exists as the respondents’ health condition improves. \par
 
 ## Weaknesses
 The analysis performed has a few apparent weaknesses.\newline
@@ -263,7 +261,7 @@ Additionally, other data analysis techniques could be used. For example, softwar
   Microdata File Documentation and User's Guide. Ottawa: Authority of the Minister    responsible for Statistics Canada.
 3. Statistics Canada. 2017. Census Profile. 2016 Census. Statistics Canada Catalogue no. 98-316-X2016001. Ottawa. Released November 29, 2017. https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/index.cfm?Lang=E
 
-4.T. Lumley (2020) "survey: analysis of complex survey samples". R package
+4. T. Lumley (2020) "survey: analysis of complex survey samples". R package
   version 4.0.
 
 5. Xavier Robin, Natacha Turck, Alexandre Hainard, Natalia Tiberti, Frédérique
@@ -272,11 +270,11 @@ Additionally, other data analysis techniques could be used. For example, softwar
   Bioinformatics, 12, p. 77.  DOI: 10.1186/1471-2105-12-77
   <http://www.biomedcentral.com/1471-2105/12/77/>
 
-6.Hao Zhu (2020). kableExtra: Construct Complex Table with 'kable' and Pipe
+6. Hao Zhu (2020). kableExtra: Construct Complex Table with 'kable' and Pipe
   Syntax. http://haozhu233.github.io/kableExtra/,
   https://github.com/haozhu233/kableExtra.
 
-7.Ethan Heinzen, Jason Sinnwell, Elizabeth Atkinson, Tina Gunderson and
+7. Ethan Heinzen, Jason Sinnwell, Elizabeth Atkinson, Tina Gunderson and
   Gregory Dougherty (2020). arsenal: An Arsenal of 'R' Functions for
   Large-Scale Statistical Summaries. https://github.com/mayoverse/arsenal,
   https://cran.r-project.org/package=arsenal,
@@ -285,16 +283,6 @@ Additionally, other data analysis techniques could be used. For example, softwar
 \newpage
 
 # Appendix
-```{r validation}
-beta1 <- coef(train.logit)
-beta2 <- coef(test.logit)
-p_value = format(summary(train.logit)$coef[,4], scientific = TRUE, digits = 4)
-# table of coefficient
-kable(cbind(round(exp(beta2),3), round(exp(beta1),3), p_value),
-      col.names = c('test','train','P value'),
-      booktabs = TRUE,
-      caption = "Cross Validation of Model")
-```
 
 ```{r ROC, fig.cap="ROC curve", echo=F}
 #ROC curve
@@ -317,8 +305,17 @@ ggplot(roc, aes(FPR,TPR)) +
            label = paste("AUC =",round(auc(roc_l),2)))
 ```
 
+```{r validation}
+beta1 <- coef(train.logit)
+beta2 <- coef(test.logit)
+p_value = format(summary(train.logit)$coef[,4], scientific = TRUE, digits = 4)
+# table of coefficient
+kable(cbind(round(exp(beta2),3), round(exp(beta1),3), p_value),
+      col.names = c('test','train','P value'),
+      booktabs = TRUE,
+      caption = "Cross Validation of Model")
+```
 
-\newpage
 
 ```{r sumtable, echo = F,  results="asis"}
 tt <- gss %>% 
