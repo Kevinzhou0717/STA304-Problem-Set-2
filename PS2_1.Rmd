@@ -1,0 +1,345 @@
+---
+title: "Predicts Individual Life Satiafication by Demographic Characteristics"
+author: "Heran Zhou, Xinyu Zhong, Yaqing Feng, Yuhan Gu"
+date: "Octobor 19, 2020"
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{subfig}
+output: 
+  bookdown::pdf_document2:
+    keep_tex: true
+    toc: false
+---
+
+\begin{center} 
+github: https://github.com/Kevinzhou0717/STA304-Problem-Set-2
+\end{center} 
+
+\newpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE)
+library(tidyverse)
+library(knitr)
+library(dplyr)
+library(survey)
+library(pROC)
+library(kableExtra)
+#library(bookdown)
+library(arsenal)
+library(gridExtra)
+library(grid)
+```
+
+```{r dataimport, echo=F, include=F}
+gss <- read_csv('gss.csv')
+raw_data <- read_csv("AA4uzB6k.csv")
+```
+
+# Abstract
+Canada has long been recognized as a country with high levels of citizen life satisfaction, and factors related to family are thought to be greatly influential to citizen’s feelings on life. This study is based on the 2017 General Social Survey (“GSS”), with the central theme being “families”, and aims to use the logistic regression model with demographic characteristics to predict the life satisfaction of individuals.  Although there were some biases in life satisfaction as a subjective factor, the results of the model provided evidence for the contribution of gender, income, education, family relationship, and other factors to life satisfaction. Government bodies and interested individuals can use the result to evaluate the effectiveness of current social welfare policies and hence make better judgments.  \par
+
+# Introduction
+Family, as the foundation of society, makes unique and irreplaceable contributions to the health of our economy. Today’s family, nonetheless, is becoming increasingly diverse due to changing living standards, diversifying cultures and improving technologies. How modern families and affiliated individuals feel about life under rapid societal changes has become a topic of our wonder. \par
+Our goal is to **investigate the influential factors affecting a person’s life satisfaction and the extent of their impacts**. This is done through organizing and analyzing data retrieved from the 31st cycle, focusing on families, of the General Social Survey at Statistics Canada. Details of the dataset will be introduced in the section that follows. In the dataset, we assumed for gender, education, living area, marital status, self-rated health and family income to be the correlated variables that will impact a person’s life satisfaction as a whole and the result is surprising. \par
+The sections that follow will elaborate on the basis of data selection, details of the regression model, regression results, discussion of results, model limitations and further improvements. Government bodies can consider the result in the policy-making process to determine which policies to adopt. Interested groups and individuals can use the result to evaluate the effectiveness of current social welfare programs.\par
+
+# Data
+We obtained this dataset from the 31st cycle of the General Social Survey (“GSS”) conducted by the Diversity and Sociocultural Statistics at Statistics Canada. This dataset contains 461 variables, derived from the responses on a telephone-based Questionnaire collected from 20,602 respondents. \par
+The sampling method of this dataset is unique and complex, with stratification, multiple stages of selection and unequal selection probabilities for respondents. To more detail, the target population is all persons fifteen years of age and older in Canada, excluding the residents of Yukon, Northwest Territories and Nunavut, as well as full-time residents of institutions. A total of 27 strata were formed by geographic areas, in which 17 are Census Metropolitan Areas (“CMAs”) and the remaining are non-CMAs. \par
+The frame population, on the other hand, is created with two different components. The first one being the list of telephone numbers in use, both landline and cellular, available to Statistics Canada. The latter would be the Address Register, a list of all dwellings within the ten provinces of interest, used to group together all telephone numbers associated with the same valid address. The sampling frame is hence the combination of telephone numbers and the Address Register. \par
+Upon collection of responses, the telephone numbers would be grouped into records that consist of the sampling unit on the survey frame. Then, each record in the frame was assigned to a stratum within its province. Lastly, a simple random sample without replacement of records was performed in each stratum.
+The dataset has several advantages. Firstly, it comprises a large pool of data, collecting beyond its desired sample size, with a variety of attributes concerning facets relevant to a family navigating through conjugal, family, and work trajectories. Moreover, the responses and information contained in this data set are also very much recent, collected and carefully weighted to represent the entire population. Specifically, each person selected in the sample represents several other persons not in the sample, and the number of persons represented by a given person is determined using a weighting factor of the sampled person. Therefore, this dataset should be a good representation of both the sampled and non-sampled population. \par
+However, some weaknesses are evident too. The most apparent ones being the sampling and non-sampling error. Sampling error, the difference between the estimates obtained from the sample and the results from a complete count taken under similar conditions, appears because the survey is designed to be based on a sample of persons. That is, have the same design and methodology be applied to a complete census, the results might be different. Non-sampling errors, on the other hand, can happen at every stage too. Examples include interviewers misunderstanding instructions, respondents making mistakes in answers, errors appearing in inputting, processing and tabulating data, and etc. However, the most prominent source of non-sampling errors would be non-responses on survey results, both partial and total. The former occurs when respondents fail to answer one or a few questions, whereas the latter occurs when the respondents fail to answer all questions. This may lead to the volunteer bias where the voluntary participants in the study do not represent the entire population. As discussed in the GSS31 user guide published by Statistics Canada, non-respondents tend to be younger males. The non-responses and the resulting unequal distribution of demographic characteristics are handled by adjusting the weight of households who responded to the survey to cover for those who did not. \par
+Moreover, aside from the sampling and non-sampling errors, the choice of frame population may limit the target population's ability to represent. As previously stated, the frame population is created through the telephone numbers available to Statistics Canada. Neglecting the fact that there may be contact numbers available to Statistics Canada already, households without telephones were excluded from the survey population. One may argue that this population is minimal, but this conclusion cannot be drawn unless further studies on the demographic group without telephones are done. \par
+Additionally, as discussed previously, this survey has its unique and complex design, which could affect the estimation and variance calculations used in common analyses, posing analytical challenges. Also, since the responses from this survey are based on a sample of persons, different figures might be obtained if a complete census had been taken using the same Questionnaire, interviewers, supervisors, processing methods, etc. \par
+
+```{r pairplot, fig.cap="Plot of raw data", out.width=".7\\linewidth", fig.align="center", echo=FALSE}
+sub_plot <- raw_data %>% 
+  select(agedc,slm_01,sex,prv,region,
+         luc_rst,marstat, ehg3_01b,famincg2,
+         odr_10,livarr12,uhw_16gr,lmam_01,srh_110) %>% 
+  mutate_at(vars(agedc:srh_110), .funs = funs(ifelse(.>=96, NA, .))) 
+# Fix the names
+sub_plot <- sub_plot %>% 
+  rename(age = agedc, feelings_life = slm_01,
+         sex = sex, province = prv,
+         region = region,pop_center = luc_rst,
+         marital_status = marstat,education = ehg3_01b,
+         income_family = famincg2,own_rent = odr_10,
+         living_arrangement = livarr12,average_hours_worked = uhw_16gr,
+         worked_last_week = lmam_01,self_rated_health = srh_110) 
+sub_plot <- sub_plot %>%
+  select(feelings_life, age, income_family, education, 
+         marital_status, living_arrangement, self_rated_health)
+sub_plot <- na.omit(sub_plot)
+pairs(sub_plot)
+```
+
+The raw data was initially filtered, reorganized, and renamed by gss_cleaning.r (Rohan & Sam Caetano, 2020), and the total variable dropped from 461 to 81 by cleaning. Highly correlated variables and variables with high proportions of missing values were excluded during the cleaning process to avoid multicollinearity and to increase model efficiency.As shown in the scatter plot (Figure \@ref(fig:pairplot)), the majority of responses are coded by scale and they are discrete variables.\par 
+The questionnaire is detailed and some variables can overlap each other. We pay more attention to variables on family level rather than individual level. In the end, we narrowed our scope to six independent predictor variables of interest. They are gender, education, living area, marital status, self-rated health and family income. After omitting missing values within this scope, the final dataset used for regression analysis contains 19,873 observations.\par
+
+```{r mutat, echo=F, include=F}
+# select variable and change variable type
+col.names <- colnames(gss[,c(12:24,27:62,64:81)])
+gss[,col.names] <- lapply(gss[,col.names], as.factor)
+data <- gss %>% 
+  select(age, sex, income_family, place_birth_canada, region, is_male,
+           education, pop_center, feelings_life, marital_status, 
+           living_arrangement, self_rated_health, income_respondent,
+           self_rated_mental_health, religion_has_affiliation,
+           children_in_household, number_marriages)
+data <- na.omit(data)
+summary(data)
+glimpse(data)
+# reduce level of self_rated_health 
+data$self_rated_health[data$self_rated_health[]=="Don't know"] <- "Fair"
+data$self_rated_health[data$self_rated_health[]=="Very good"] <- "Good"
+data$self_rated_health <- droplevels(data$self_rated_health)
+# reduce level of education level
+levels(data$education)[8:9] <- c("Bachelor or above",
+                                  "college / below bachelor level")
+data$education[data$education[]=="Bachelor's degree (e.g. B.A., B.Sc., LL.B.)"] <- "Bachelor or above"
+data$education[data$education[]=="University certificate, diploma or degree above the bach..."] <- "Bachelor or above"
+data$education[data$education[]=="University certificate or diploma below the bachelor's level"] <- "college / below bachelor level"
+data$education[data$education[]=="College, CEGEP or other non-university certificate or di..."] <- "college / below bachelor level"
+data$education[data$education[]=="Trade certificate or diploma"] <- "college / below bachelor level"
+data$education <- droplevels(data$education)
+# reduce level of living arrangement
+levels(data$living_arrangement)[12:13] <- c("No spouse and children",
+                                 "Spouse and children")
+data$living_arrangement[data$living_arrangement[]=="No spouse and single child under 25 years of age" ]<-"No spouse and children"
+data$living_arrangement[data$living_arrangement[]=="No spouse and single child 25 years of age or older" ]<-"No spouse and children"
+data$living_arrangement[data$living_arrangement[]=="No spouse and non-single child(ren)" ]<-"No spouse and children"
+data$living_arrangement[data$living_arrangement[]=="Spouse and single child under 25 years of age" ]<-"Spouse and children"
+data$living_arrangement[data$living_arrangement[]=="Spouse and single child 25 years of age or older" ]<-"Spouse and children"
+data$living_arrangement[data$living_arrangement[]=="Spouse and non-single child(ren)" ]<-"Spouse and children"
+data$living_arrangement <- droplevels(data$living_arrangement)
+# reduce level of pop_center
+levels(data$pop_center)[4] <- c("Rural (non CMA/CA)/Prince Edward Island")
+data$pop_center[data$pop_center[]=="Prince Edward Island" ]<-"Rural (non CMA/CA)/Prince Edward Island"
+data$pop_center[data$pop_center[]=="Rural areas and small population centres (non CMA/CA)" ]<-"Rural (non CMA/CA)/Prince Edward Island"
+data$pop_center <- droplevels(data$pop_center)
+# reduce level of income_family
+levels(data$income_family)[7] <- "$50,000 to $124,999"
+data$income_family[data$income_family[]=="$50,000 to $74,999"]<-"$50,000 to $124,999"
+data$income_family[data$income_family[]=="$75,000 to $99,999"]<-"$50,000 to $124,999"
+data$income_family[data$income_family[]=="$100,000 to $ 124,999"]<-"$50,000 to $124,999"
+data$income_family <- droplevels(data$income_family)
+```
+
+```{r response,echo=F, include=F}
+#for logistic model, divide feeling_of_life by mean
+mean(data$feelings_life)
+summary(as.factor(data$feelings_life))
+data <- data %>% 
+  mutate(life_satisfication = as.factor(ifelse(feelings_life>mean(feelings_life),1,0)))
+```
+
+# Model
+
+The most of variables in the dataset is discrete and lack linearity between covariates and response which violate assumption of simple linear regression. Though a linear regression model may be more straightforward and easier to analyse, it lacks linearity between covariates and response and violates the assumption of linear model. Therefore, we have chosen to use logistic regression instead, which is more suitable when analysing multi-characteristic discrete variables. \par
+The life satisfaction responses collected in the GSS (2017) were individuals’ self-rated feelings on a scale of 0 to 10, and the average is relatively high. It is unclear how one unit change of life satisfaction will impact a person’s behaviours, and we have  We have hence divided the life feeling responses by their mean value (8.09), to differentiate between individuals with above-average life satisfactions (indicated by 1) and those without (indicated by 0). The resulting new variable, _**Life_Satisfaction**_, which is an indicator, is the response variable of our model. \par
+Under our hypothesis, an improvement in 
+education level, 
+family income \footnote{the study objective is life satisfaction, we have to consider the special cases such as underaged individuals taking income from their family. This group of individuals may have above average life satisfactions with no personal income.so we choose 'family income' as predictor instead of 'respondent income'}, 
+marital status or 
+self rated health \footnote{we predict an individual’s physical health will have greater influence on his or her life satisfaction. As an individual’s physical health can affect his or her mental health and vice versa}
+is set to increase the odds of life satisfaction above average. 
+Male\footnote{for logistic model, 'sex' variale and 'is male' variable does not leaad to statistital difference, choose 'sex' for more direct interpretation} is assumed to be more likely to have above average life satisfaction than female, due to gender inequalities at workplace, home, etc. Individuals living in rural areas or Prince Edward Island are more likely to have above average life satisfaction than those living in urban areas, due to a more relaxed lifestyle.\par
+Then, our basic expression of our model is shown as following:
+\[
+log(\frac{p}{1-p}) = \beta_0 +\beta_2x_1 +\beta_3x_2 +\beta_4x_3 +\beta_5x_4+\beta_6 x_5+\beta_7 x_6+ \epsilon
+\]
+where p represents the probability to have life satisfaction above average. $x_i$(i=1,...,6) represent *gender, education level, living area, family income, marital status and self_rated_health* correspondingly, $\beta_i$(i=2,..,7) are estimate coefficient, $\beta_1$ is intercept, $\epsilon$ is random error.\par
+For better representation of data and comprehensive interpretation of the model, we have simplified the classification of certain categorical predictor variables by merging their affiliated categories into new categories. Categories are aggregated as referenced in Appendix A: Summary of Category Aggregations (Table \@ref(tab:sumcat).\par
+However, we do recognize that the results and outputs from a logistic regression model is harder to interpret and analyze. The predictions would need to be inferred from odds and exponents, which will be done in the following sections. \par
+All analysis of data is done by Rstudio software.\par
+
+
+```{r analyse,ech=F, include=F}
+#split data for validation
+set.seed(304)
+# 60% observations in train dataset, 40% in test data set
+smp_size <- floor(0.6 * nrow(data))
+train_ind <- sample(seq_len(nrow(data)), size = smp_size)
+train <- data[train_ind, ]
+test <- data[-train_ind, ]
+# fit logistic model
+N=35151728
+n=length(train$life_satisfication)
+fpc.srs = rep(N, n)
+train.srs <- svydesign(id=~1, data=train, fpc=fpc.srs)
+train.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
+                       marital_status + self_rated_health +income_family, 
+                       train.srs, family="binomial")
+summary(train.logit) 
+# use test dataset to test validity
+N=35151728	
+n=length(test$life_satisfication)
+fpc.srs = rep(N, n)
+test.srs <- svydesign(id=~1, data=test, fpc=fpc.srs)
+test.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
+                       marital_status + self_rated_health + income_family, 
+                       test.srs, family="binomial")
+summary(test.logit)
+
+#full model
+N=35151728
+n=length(data$life_satisfication)
+fpc.srs = rep(N, n)
+data.srs <- svydesign(id=~1, data=data, fpc=fpc.srs)
+data.logit <- svyglm(life_satisfication ~ sex + education + pop_center +
+                       marital_status + self_rated_health +income_family, 
+                       data.srs, family="binomial")
+summary(data.logit) 
+```
+
+# Result
+```{r model}
+beta <- coef(data.logit)
+SD <-  summary(data.logit)$coef[,2]
+p_value = format(summary(data.logit)$coef[,4], scientific = TRUE, digits = 3)
+CI <- round(exp(confint(data.logit)),3)
+# table of coefficient
+kable(cbind(round(exp(beta),3),CI[,1],CI[,2], p_value),
+      col.names = c('Estimated', 
+                    'Confidence', 'Interval',
+                    'P value'),
+      booktabs = TRUE,
+      caption = "Summary of Model")
+```
+
+The final model result indicates gender, education, living area, marital status, self-rated health and family income are significant (p value < 0.05) predictors of life satisfaction. The estimated coefficient after exponential calculation, confidence interval, and p value are summarized in Table \@ref(tab:model).\par
+According to the summary (Table \@ref(tab:model)), the odds of life satisfaction level above average will decrease by about 10% for males than females. The odds of more life satisfaction increase by 17.8% for living at rural or island than people living in urban or CMA/Ca areas. Self rated health is shown as highly 
+
+According to the summary (Table \@ref(tab:model)), the odds of life satisfaction level above average will decrease by about 10% for males than females. The odds of more life satisfaction increase by 17.8% for living at rural or island than people living in urban or CMA/Ca area. Self rated health is shown as highly significant in determining the admit. Compare with *Excellent*, the odds of more life satisfaction decrease by 60%, 84%, 90% correspond to  is *Good*, *Fair*, *Poor*.\par
+
+Compared with the equivalency high school education level, odds of more life satisfaction increase by 43.7% when education level less than high school, decrease by 16.9 when education level is bachelor or above. For the college / below bachelor level education, confidence intervals contain 1 which indicate there is no significant difference. \par
+
+Also, compared with family income more than 125,000 dollar, the odds of more life satisfaction decrease by 28%, 20%, 12% correspond to family income Less than 25,000, 25,000 to 49,999, 50,000 to 124,999 dollar.
+Furthermore, when *divorce* is base line of marriage status, the odds of more life satisfaction decrease by 37%, 24.6% correspond to *separated*, *single*, and increase by 23%,31%,75.4% correspond to *living common law*, *widowed*, and *married*.\par
+
+In addition, the AUC (area under curve) = 0.68 as the ROC curve in appendix (Figure \@ref(fig:ROC)) illustrates that the predictive of the final model is 0.68, which is considered acceptable. Also, as shown in appendix Table \@ref(tab:validation), the model build use test dataset gets similar coefficients of the model as when using the training dataset, so the final model is validated through cross-validation. That is, the model is reasonable valid and predictive.\par
+
+
+Table \@ref(tab:model).
+Table \@ref(tab:validation).
+Table \@ref(tab:sumtable).
+
+
+
+
+```{r dis, fig.cap='Feelings of life vs. Self rated health', echo=F}
+ggplot(data, aes(self_rated_health,feelings_life))+
+  geom_boxplot()
+```
+
+# Discussion
+
+
+
+## Weaknesses
+
+
+## Next Steps
+
+
+\newpage
+
+# References
+1. Alexander, R., & Caetano, S. (2020, 10 07). gss_cleaning.R.
+2. Beaupre, P. (2020). General Social Survey Cycle 31: Families, Public Use
+  Microdata File Documentation and User's Guide. Ottawa: Authority of the Minister    responsible for Statistics Canada.
+3. Statistics Canada. 2017. Census Profile. 2016 Census. Statistics Canada Catalogue no. 98-316-X2016001. Ottawa. Released November 29, 2017. https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/index.cfm?Lang=E
+
+# Appendix
+```{r validation}
+beta1 <- coef(train.logit)
+beta2 <- coef(test.logit)
+p_value = format(summary(train.logit)$coef[,4], scientific = TRUE, digits = 4)
+# table of coefficient
+kable(cbind(round(exp(beta2),3), round(exp(beta1),3), p_value),
+      col.names = c('test','train','P value'),
+      booktabs = TRUE,
+      caption = "Cross Validation of Model")
+```
+
+```{r ROC, fig.cap="ROC curve", echo=F}
+#ROC curve
+roc_p <- predict(data.logit, type = "response")
+roc_l <- roc(data$life_satisfication ~ roc_p)
+## Setting levels: control = 0, case = 1
+## Setting direction: controls < cases
+## The True Positive Rate ##
+TPR <- roc_l$sensitivities
+## The False Positive Rate ##
+FPR <- 1 - roc_l$specificities
+roc <- data.frame(FPR,TPR)
+#ROC curve
+ggplot(roc, aes(FPR,TPR)) + 
+  geom_line(size = 2, alpha = 0.7,col='red') +
+  geom_segment(aes(x = 0, xend = 1, y = 0, yend = 1), linetype="dashed") +
+  labs(x = "False Positive Rate (1-Specificity)", 
+       y = "True Positive Rate (Sensitivity)") +
+  annotate("text", x = 0.75, y = 0.5, vjust = 0, 
+           label = paste("AUC =",round(auc(roc_l),2)))
+```
+
+
+\newpage
+
+```{r sumtable, echo = F,  results="asis"}
+tt <- gss %>% 
+  select(age, sex, feelings_life, place_birth_canada,  
+         vis_minority, citizenship_status, own_rent,income_family, 
+         education, pop_center, marital_status, 
+         living_arrangement, self_rated_health, 
+         self_rated_mental_health, religion_has_affiliation,
+         children_in_household, number_marriages)
+table_one <- tableby(gss$region ~ ., data = tt)
+summary(table_one, title = "Summary of Data")
+
+```
+
+\newpage
+
+\begin{longtable}[c]{|l|l|l|}
+\caption{Summary of Category Aggregations}
+\label{tab:sumcat}\\
+\hline
+Variable Names & \textbf{Original Categories} & \textbf{Aggregated Categories} \\ \hline
+\endfirsthead
+%
+\endhead
+%
+\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Gender \\ (“sex”)\end{tabular}}} & Male & Male \\ \cline{2-3} 
+ & Female & Female \\ \hline
+\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Education Level \\ (“education”)\end{tabular}}} & Bachelor’s degree & \multirow{2}{*}{Bachelor or above} \\ \cline{2-2}
+ & \begin{tabular}[c]{@{}l@{}}University certificate, diploma or \\ degree above the bach…\end{tabular} &  \\ \cline{2-3} 
+ & \begin{tabular}[c]{@{}l@{}}University certificate, diploma or \\ degree below the bachelor’s level\end{tabular} & \multirow{3}{*}{college/below bachelor level} \\ \cline{2-2}
+ & \begin{tabular}[c]{@{}l@{}}College, CEGEP or \\ other non-university certificate or di…\end{tabular} &  \\ \cline{2-2}
+ & Trade certificate or diploma &  \\ \cline{2-3} 
+ & \begin{tabular}[c]{@{}l@{}}High school diploma or \\ a high school equivalency certificate\end{tabular} & \begin{tabular}[c]{@{}l@{}}High school diploma or \\ a high school equivalency certificate\end{tabular} \\ \hline
+\multirow{3}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Living area \\ (“pop\_center”)\end{tabular}}} & \begin{tabular}[c]{@{}l@{}}Rural areas and \\ small population centres\\ (non CMA/CA)\end{tabular} & \multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}Rural areas (non CMA/CA) or \\ Prince Edward Island\end{tabular}} \\ \cline{2-2}
+ & Prince Edward Island &  \\ \cline{2-3} 
+ & \begin{tabular}[c]{@{}l@{}}Larger urban population centres \\ (CMA/CA)\end{tabular} & \begin{tabular}[c]{@{}l@{}}Larger urban population centres \\ (CMA/CA)\end{tabular} \\ \hline
+\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Family income \\ (“income\_family”)\end{tabular}}} & Less than \$25,000 & Less than \$25,000 \\ \cline{2-3} 
+ & $25,000 to $49,999 & 25,000 to \$49,999 \\ \cline{2-3} 
+ & $50,000 to $74,999 & \multirow{3}{*}{$50,000 to $124,999} \\ \cline{2-2}
+ & $75,000 to $99,999 &  \\ \cline{2-2}
+ & $100,000 to $124,999 &  \\ \cline{2-3} 
+ & \$125,000 and more & above \$125,000 \\ \hline
+\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Marital Status\\ (“marital\_status”)\end{tabular}}} & Single, never married & Single, never married \\ \cline{2-3} 
+ & Married & Married \\ \cline{2-3} 
+ & Living common-law & Living common-law \\ \cline{2-3} 
+ & Separated & Separated \\ \cline{2-3} 
+ & Widowed & Widowed \\ \cline{2-3} 
+ & Divorced & Divorced \\ \hline
+\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Self Rated Health\\ (“self\_rated\_health”)\end{tabular}}} & Excellent & Excellent \\ \cline{2-3} 
+ & Very good & \multirow{2}{*}{Good} \\ \cline{2-2}
+ & Good &  \\ \cline{2-3} 
+ & Fair & \multirow{2}{*}{Fair} \\ \cline{2-2}
+ & Don't know &  \\ \cline{2-3} 
+ & Poor & Poor \\ \hline
+\end{longtable}
