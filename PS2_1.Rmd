@@ -46,11 +46,14 @@ The sections that follow will elaborate on the basis of data selection, details 
 
 # Data
 We obtained this dataset from the 31st cycle of the General Social Survey (“GSS”) conducted by the Diversity and Sociocultural Statistics at Statistics Canada. This dataset contains 461 variables, derived from the responses on a telephone-based Questionnaire collected from 20,602 respondents. \par
-The sampling method of this dataset is unique and complex, with stratification, multiple stages of selection and unequal selection probabilities for respondents. To more detail, the target population is all persons fifteen years of age and older in Canada, excluding the residents of Yukon, Northwest Territories and Nunavut, as well as full-time residents of institutions. A total of 27 strata were formed by geographic areas, in which 17 are Census Metropolitan Areas (“CMAs”) and the remaining are non-CMAs. \par
-The frame population, on the other hand, is created with two different components. The first one being the list of telephone numbers in use, both landline and cellular, available to Statistics Canada. The latter would be the Address Register, a list of all dwellings within the ten provinces of interest, used to group together all telephone numbers associated with the same valid address. The sampling frame is hence the combination of telephone numbers and the Address Register. \par
-Upon collection of responses, the telephone numbers would be grouped into records that consist of the sampling unit on the survey frame. Then, each record in the frame was assigned to a stratum within its province. Lastly, a simple random sample without replacement of records was performed in each stratum.
-The dataset has several advantages. Firstly, it comprises a large pool of data, collecting beyond its desired sample size, with a variety of attributes concerning facets relevant to a family navigating through conjugal, family, and work trajectories. Moreover, the responses and information contained in this data set are also very much recent, collected and carefully weighted to represent the entire population. Specifically, each person selected in the sample represents several other persons not in the sample, and the number of persons represented by a given person is determined using a weighting factor of the sampled person. Therefore, this dataset should be a good representation of both the sampled and non-sampled population. \par
-However, some weaknesses are evident too. The most apparent ones being the sampling and non-sampling error. Sampling error, the difference between the estimates obtained from the sample and the results from a complete count taken under similar conditions, appears because the survey is designed to be based on a sample of persons. That is, have the same design and methodology be applied to a complete census, the results might be different. Non-sampling errors, on the other hand, can happen at every stage too. Examples include interviewers misunderstanding instructions, respondents making mistakes in answers, errors appearing in inputting, processing and tabulating data, and etc. However, the most prominent source of non-sampling errors would be non-responses on survey results, both partial and total. The former occurs when respondents fail to answer one or a few questions, whereas the latter occurs when the respondents fail to answer all questions. This may lead to the volunteer bias where the voluntary participants in the study do not represent the entire population. As discussed in the GSS31 user guide published by Statistics Canada, non-respondents tend to be younger males. The non-responses and the resulting unequal distribution of demographic characteristics are handled by adjusting the weight of households who responded to the survey to cover for those who did not. \par
+The **sampling method** of this dataset is unique and complex, with stratification, multiple stages of selection and unequal selection probabilities for respondents. To more detail, the **target population** is all persons fifteen years of age and older in Canada, excluding the residents of Yukon, Northwest Territories and Nunavut, as well as full-time residents of institutions. A total of 27 strata were formed by geographic areas, in which 17 are Census Metropolitan Areas (“CMAs”) and the remaining are non-CMAs. \par
+The **frame population**, on the other hand, is created with two different components. The first one being the list of telephone numbers in use, both landline and cellular, available to Statistics Canada. The latter would be the Address Register, a list of all dwellings within the ten provinces of interest, used to group together all telephone numbers associated with the same valid address. The **sampling frame** \footnote{Upon collection of responses, the telephone numbers would be grouped into records that consist of the sampling unit on the survey frame. Then, each record in the frame was assigned to a stratum within its province. Lastly, a simple random sample without replacement of records was performed in each stratum.} 
+is hence the combination of telephone numbers and the Address Register. \par
+
+The dataset has several **advantages**. Firstly, it comprises a large pool of data, collecting beyond its desired sample size, with a variety of attributes concerning facets relevant to a family navigating through conjugal, family, and work trajectories. Moreover, the responses and information contained in this data set are also very much recent, collected and carefully weighted to represent the entire population. Specifically, each person selected in the sample represents several other persons not in the sample, and the number of persons represented by a given person is determined using a weighting factor of the sampled person. Therefore, this dataset should be a good representation of both the sampled and non-sampled population. \par
+However, some **weaknesses** are evident too. The most apparent ones being the sampling and non-sampling error. **Sampling error**, the difference between the estimates obtained from the sample and the results from a complete count taken under similar conditions, appears because the survey is designed to be based on a sample of persons. That is, have the same design and methodology be applied to a complete census, the results might be different. 
+**Non-sampling errors**, on the other hand, can happen at every stage too \footnote{Examples include interviewers misunderstanding instructions, respondents making mistakes in answers, errors appearing in inputting, processing and tabulating data, and etc.}. 
+However, the most prominent source of non-sampling errors would be non-responses on survey results, both partial and total. The former occurs when respondents fail to answer one or a few questions, whereas the latter occurs when the respondents fail to answer all questions. This may lead to the volunteer bias where the voluntary participants in the study do not represent the entire population. As discussed in the GSS31 user guide published by Statistics Canada, non-respondents tend to be younger males. The non-responses and the resulting unequal distribution of demographic characteristics are handled by adjusting the weight of households who responded to the survey to cover for those who did not. \par
 Moreover, aside from the sampling and non-sampling errors, the choice of frame population may limit the target population's ability to represent. As previously stated, the frame population is created through the telephone numbers available to Statistics Canada. Neglecting the fact that there may be contact numbers available to Statistics Canada already, households without telephones were excluded from the survey population. One may argue that this population is minimal, but this conclusion cannot be drawn unless further studies on the demographic group without telephones are done. \par
 Additionally, as discussed previously, this survey has its unique and complex design, which could affect the estimation and variance calculations used in common analyses, posing analytical challenges. Also, since the responses from this survey are based on a sample of persons, different figures might be obtained if a complete census had been taken using the same Questionnaire, interviewers, supervisors, processing methods, etc. \par
 
@@ -142,17 +145,23 @@ The most of variables in the dataset is discrete and lack linearity between cova
 The life satisfaction responses collected in the GSS (2017) were individuals’ self-rated feelings on a scale of 0 to 10, and the average is relatively high. It is unclear how one unit change of life satisfaction will impact a person’s behaviours, and we have  We have hence divided the life feeling responses by their mean value (8.09), to differentiate between individuals with above-average life satisfactions (indicated by 1) and those without (indicated by 0). The resulting new variable, _**Life_Satisfaction**_, which is an indicator, is the response variable of our model. \par
 Under our hypothesis, an improvement in 
 education level, 
-family income \footnote{the study objective is life satisfaction, we have to consider the special cases such as underaged individuals taking income from their family. This group of individuals may have above average life satisfactions with no personal income.so we choose 'family income' as predictor instead of 'respondent income'}, 
-marital status or 
-self rated health \footnote{we predict an individual’s physical health will have greater influence on his or her life satisfaction. As an individual’s physical health can affect his or her mental health and vice versa}
+family income \footnote{We have to consider the special cases such as underaged individuals taking income from their family. This group of individuals may have above average life satisfactions with no personal income. “Income_respondent” is hence removed from our model.}, 
+marital status \footnote{“marital_status” is chosen over “living_arrangement” since the former is more descriptive and specific. For instance, by living “along” under “living_arrangement”, an individual can be separated, divorced or widowed.
+}
+or 
+self rated health \footnote{We assume that an individual’s physical health will have greater influence on his or her life satisfaction. As an individual’s physical health can affect his or her mental health and vice versa, “self_rated_mental_health” was also removed to avoid multicollinearity.}
 is set to increase the odds of life satisfaction above average. 
-Male\footnote{for logistic model, 'sex' variale and 'is male' variable does not leaad to statistital difference, choose 'sex' for more direct interpretation} is assumed to be more likely to have above average life satisfaction than female, due to gender inequalities at workplace, home, etc. Individuals living in rural areas or Prince Edward Island are more likely to have above average life satisfaction than those living in urban areas, due to a more relaxed lifestyle.\par
+Male\footnote{for logistic model, 'sex' variale and 'is male' variable does not leaad to statistital difference, choose 'sex' for more direct interpretation} 
+is assumed to be more likely to have above average life satisfaction than female, due to gender inequalities at workplace, home, etc. Individuals living in rural areas or Prince Edward Island are more likely to have above average life satisfaction than those living in urban 
+areas \footnote{We assume that an individual’s appetite for a living environment impacts more on his or her life satisfaction than the general geographic region. “pop_center” is hence selected over “province” or “region”.}
+, due to a more relaxed lifestyle.\par
+Some common demographic characteristics such as age and minority status are not selected due to lack of representative. Others including average hours worked and occupation are excluded from the regression model due to high proportions of  missing values. \par
 Then, our basic expression of our model is shown as following:
 \[
-log(\frac{p}{1-p}) = \beta_0 +\beta_2x_1 +\beta_3x_2 +\beta_4x_3 +\beta_5x_4+\beta_6 x_5+\beta_7 x_6+ \epsilon
+log(\frac{p}{1-p}) = \beta_0 +\beta_1x_1 +\beta_2x_2 +...+\beta_nx_n + \epsilon
 \]
-where p represents the probability to have life satisfaction above average. $x_i$(i=1,...,6) represent *gender, education level, living area, family income, marital status and self_rated_health* correspondingly, $\beta_i$(i=2,..,7) are estimate coefficient, $\beta_1$ is intercept, $\epsilon$ is random error.\par
-For better representation of data and comprehensive interpretation of the model, we have simplified the classification of certain categorical predictor variables by merging their affiliated categories into new categories. Categories are aggregated as referenced in Appendix A: Summary of Category Aggregations (Table \@ref(tab:sumcat).\par
+where p represents the probability to have life satisfaction above average. $x_i$(i=1,...,n) correspond to levels of *gender*, *education level*, *living area*, *family income*, *marital status* and *self_rated_health*. (Thus, n = sum of level for each predictor has - number of predictors, since one level will used as based line i logistic model), $\beta_i$(i=2,..,7) are estimate coefficient, $\beta_0$ is intercept, $\epsilon$ is random error.\par
+For better representation of data and comprehensive interpretation of the model, we have simplified the classification of certain categorical predictor variables by merging their affiliated categories into new categories. Categories are aggregated as referenced in Appendix A: Summary of Category Aggregations (Table \@ref(tab:sumcat)).\par
 However, we do recognize that the results and outputs from a logistic regression model is harder to interpret and analyze. The predictions would need to be inferred from odds and exponents, which will be done in the following sections. \par
 All analysis of data is done by Rstudio software.\par
 
@@ -210,40 +219,41 @@ kable(cbind(round(exp(beta),3),CI[,1],CI[,2], p_value),
       caption = "Summary of Model")
 ```
 
-The final model result indicates gender, education, living area, marital status, self-rated health and family income are significant (p value < 0.05) predictors of life satisfaction. The estimated coefficient after exponential calculation, confidence interval, and p value are summarized in Table \@ref(tab:model).\par
-According to the summary (Table \@ref(tab:model)), the odds of life satisfaction level above average will decrease by about 10% for males than females. The odds of more life satisfaction increase by 17.8% for living at rural or island than people living in urban or CMA/Ca areas. Self rated health is shown as highly 
-
-According to the summary (Table \@ref(tab:model)), the odds of life satisfaction level above average will decrease by about 10% for males than females. The odds of more life satisfaction increase by 17.8% for living at rural or island than people living in urban or CMA/Ca area. Self rated health is shown as highly significant in determining the admit. Compare with *Excellent*, the odds of more life satisfaction decrease by 60%, 84%, 90% correspond to  is *Good*, *Fair*, *Poor*.\par
-
-Compared with the equivalency high school education level, odds of more life satisfaction increase by 43.7% when education level less than high school, decrease by 16.9 when education level is bachelor or above. For the college / below bachelor level education, confidence intervals contain 1 which indicate there is no significant difference. \par
-
-Also, compared with family income more than 125,000 dollar, the odds of more life satisfaction decrease by 28%, 20%, 12% correspond to family income Less than 25,000, 25,000 to 49,999, 50,000 to 124,999 dollar.
-Furthermore, when *divorce* is base line of marriage status, the odds of more life satisfaction decrease by 37%, 24.6% correspond to *separated*, *single*, and increase by 23%,31%,75.4% correspond to *living common law*, *widowed*, and *married*.\par
-
+The final model result indicates that gender, education, living area, marital status, self-rated health and family income are the significant (p value < 0.05) predictors of life satisfaction. In addition, self-rated health, some of education, marital status and family income levels are especially significant (p<0.001). 
+The response of logistic model is log odds as described in last section, we did exponential transfer for the estimated coefficient to order to more direct interpretation. The estimated coefficient after exponential calculation, confidence interval, and p-value are summarized in Table \@ref(tab:model).\par
 In addition, the AUC (area under curve) = 0.68 as the ROC curve in appendix (Figure \@ref(fig:ROC)) illustrates that the predictive of the final model is 0.68, which is considered acceptable. Also, as shown in appendix Table \@ref(tab:validation), the model build use test dataset gets similar coefficients of the model as when using the training dataset, so the final model is validated through cross-validation. That is, the model is reasonable valid and predictive.\par
 
+# Discussion
+As discussed in previous sections, the data is obtained from the 31st cycle of the General Social Survey (“GSS”) conducted by the Diversity and Sociocultural Statistics at Statistics Canada. The volunteer bias may exist and reweighting was performed to adjust for that. Response variable is also transformed to categorical variable to avoid the unequal distribution of original variable caused by such bias. \par
+According to the summary (Table \@ref(tab:model)), the odds of life satisfaction level above average will decrease by about 10% for males than females, increase by 17.8% for individuals living in rural areas or Prince Edward Island than those living in urban or CMA/CA areas. Self rated health is shown as highly significant in determining the admit. Compare with *Excellent*, the odds of life satisfaction level above average will decrease by 60%, 84%, 90% correspond to  is *Good*, *Fair*, *Poor*.\par
+Compared with high school and its equivalent education level, the odds of more life satisfaction will increase by 43.7% when education level is less than high school, decrease by 16.9% when education level is bachelor or above. The confidence interval of the coefficient of college / below bachelor level education contains 1 which indicates that there is no significant difference. \par 
+As well, compared with family income more than $125,000, the odds of above average life satisfaction will decrease by 28%, 20%, 12% when family income is Less than $25,000, $25,000 to $49,999, $50,000 to $124,999, respectively. \par
+In contrast with marital status’ baseline value *divorce*, the odds of more life satisfaction will decrease by 37%, 24.6% when the respondent’s marital status is *separated*and *single*, and increase by 23%, 31%, 75.4% when it is *living common law*, *widowed*, and *married*.\par
+The results indicate that living area, family income and self-rated health comply with our hypothesis, whereas gender, education and marital status have brought us surprises. \par
+As implied by the results, the increase in family income and the improvement of self-rated health can make an individual more probable to have above average life satisfactions. People living in rural areas or Prince Edward Island are more likely to have outstanding life satisfactions, in contrast with those living in large urban areas. \par
+However, the higher an individual’s education level is, the less likely he or she will have life satisfactions above average. This is possibly due to the social structure of Canada. As a developed country, Canada has more skilled workers than unskilled workers. Such imbalance has caused an excess supply of skilled workers and an excess demand for unskilled workers, which has resulted in the competitive job market for undergraduates and high labor cost. \par
+Furthermore, females are slightly more likely to have above average life satisfactions than males. The odds will increase by a small difference for females than males. This could possibly imply that the issue of gender inequality is contained well in Canada. \par
+Lastly, marital status complies partially with our expectations. People married or living common-law are generally more likely to have above average life satisfactions than people divorced and single or separated people are generally less likely to have above average life satisfactions. However, it is out of our expectations that widowed people have higher odds than the divorced. We have found no good explanation for this phenomenon. It is hard to argue whether “widowed” is an improvement from “divorced”. \par
 
-Table \@ref(tab:model).
-Table \@ref(tab:validation).
-Table \@ref(tab:sumtable).
-
-
-
+The model can provide reference to government bodies on the effectiveness of current social welfare policies. For instance, self-rated health is an extremely significant variable which brings significant difference among each of its affiliated categories. This could imply that Canadian social welfare policies should focus on Canadians’ health and the universal healthcare program is potentially a great contributor to Canada’s high average life satisfaction. As well, government bodies, educational institutions and interested individuals can analyze the results on education coefficients to reconsider the necessity of education from a demographic perspective instead of a financial perspective. Universities can also reconsider the justifiability of increasing tuitions. \par
 
 ```{r dis, fig.cap='Feelings of life vs. Self rated health', echo=F}
 ggplot(data, aes(self_rated_health,feelings_life))+
   geom_boxplot()
 ```
-
-# Discussion
-
-
+As indicated by the sample boxplot (Figure \@ref(fig:dis)) that measures the relationship between feelings_life and self_rated_health, there are apparent differences between each health category. A clear trend of increasing life satisfaction exists as the respondents’ health condition improves. \par
 
 ## Weaknesses
-
+The analysis performed has a few apparent weaknesses.\newline
+Firstly, and probably the most apparent, the mean of both variable Feeling_life and Age is somewhat distorted towards the higher end. Note that the variable Feeling_life is ordinal in the dataset, ranging from 0 to 10 inclusive, and its mean is 8.09 when split as indicator variable, leaning toward the higher end. This either suggests that the sampled population has a very positive feeling towards their lives, or that this variable was over-reported during the survey process and cannot be used to represent and predict the population. \par
+The high age mean, on the other hand, suggests that the majority of people who responded to the survey are of the older age groups. Therefore, the analysis performed on such respondent demographic composition could have limited representation power on the entire target population. \par
+Secondly, as discussed in the previous sections, we omitted numerous variables that have high correlation or high proportions of missing values to avoid multicollinearity and to increase model efficiency. However, some variables that were omitted may be potentially effective and would be logical to consider when evaluating a person’s life satisfaction level. For example, average number of working hours, mental health status and occupation. Excluding them may seem beneficial from the model building perspective, but illogical otherwise. \par
 
 ## Next Steps
+The following paragraphs will offer some insights into potential next steps for future analyses. \newline
+As previously discussed, the frame population of the survey that provided information for the dataset is created with two components, in which the major one is the list of telephone numbers available to Statistics Canada. By the nature of such a frame population, households without a telephone number available to Statistics Canada are omitted from the survey population, hindering the representation ability of the sampled population. Therefore, we would suggest conducting a follow-up survey using different approaches to cover as much of the target population as possible. An alternative approach could be a computer-assisted personal interviewing (CAPI), or computer-assisted self-interviewing (CASI), both of which would allow a broader exposure to the target population via digital technology. The use of digital technology may also enable the follow-up survey to reach younger respondents, as the age mean of the survey presented in the dataset is somewhat distorted towards the higher end. Note that the follow-up surveys could narrow the general survey topic down to analysis-specific ones to increase the amount of relevant data available for the analysis. \par
 
+Additionally, other data analysis techniques could be used. For example, software like Python could be used in addition to R, as done in previous sections, to allow for a more concise and detailed analysis. Also, data could be inputted using automated machines to reduce manual input errors.  \par
 
 \newpage
 
@@ -252,6 +262,27 @@ ggplot(data, aes(self_rated_health,feelings_life))+
 2. Beaupre, P. (2020). General Social Survey Cycle 31: Families, Public Use
   Microdata File Documentation and User's Guide. Ottawa: Authority of the Minister    responsible for Statistics Canada.
 3. Statistics Canada. 2017. Census Profile. 2016 Census. Statistics Canada Catalogue no. 98-316-X2016001. Ottawa. Released November 29, 2017. https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/index.cfm?Lang=E
+
+4.T. Lumley (2020) "survey: analysis of complex survey samples". R package
+  version 4.0.
+
+5. Xavier Robin, Natacha Turck, Alexandre Hainard, Natalia Tiberti, Frédérique
+  Lisacek, Jean-Charles Sanchez and Markus Müller (2011). pROC: an
+  open-source package for R and S+ to analyze and compare ROC curves. BMC
+  Bioinformatics, 12, p. 77.  DOI: 10.1186/1471-2105-12-77
+  <http://www.biomedcentral.com/1471-2105/12/77/>
+
+6.Hao Zhu (2020). kableExtra: Construct Complex Table with 'kable' and Pipe
+  Syntax. http://haozhu233.github.io/kableExtra/,
+  https://github.com/haozhu233/kableExtra.
+
+7.Ethan Heinzen, Jason Sinnwell, Elizabeth Atkinson, Tina Gunderson and
+  Gregory Dougherty (2020). arsenal: An Arsenal of 'R' Functions for
+  Large-Scale Statistical Summaries. https://github.com/mayoverse/arsenal,
+  https://cran.r-project.org/package=arsenal,
+  https://mayoverse.github.io/arsenal/.
+
+\newpage
 
 # Appendix
 ```{r validation}
